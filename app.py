@@ -109,51 +109,37 @@ def add_trade():
     direction = request.form.get("direction", "LONG")
     entry_price = request.form.get("entry_price")
     exit_price = request.form.get("exit_price")
+    tp_price = request.form.get("tp_price") # EKLENDİ
+    sl_price = request.form.get("sl_price") # EKLENDİ
     quantity = request.form.get("quantity", "1")
     trade_date = request.form.get("trade_date")
     notes = request.form.get("notes", "").strip()
 
-    if not asset or not entry_price or not trade_date:
-        return "Eksik bilgi var.", 400
+    #
 
     try:
         entry_price = float(entry_price)
         quantity = float(quantity)
-
-        if exit_price:
-            exit_price = float(exit_price)
-        else:
-            exit_price = None
+        exit_price = float(exit_price) if exit_price else None
+        tp_price = float(tp_price) if tp_price else None # EKLENDİ
+        sl_price = float(sl_price) if sl_price else None # EKLENDİ
 
         if quantity <= 0:
             return "Quantity 0'dan büyük olmalı.", 400
-
     except ValueError:
         return "Fiyat veya miktar geçersiz.", 400
 
     conn = get_db_connection()
-
     conn.execute("""
         INSERT INTO trades (
-            asset,
-            direction,
-            entry_price,
-            exit_price,
-            quantity,
-            trade_date,
-            notes
+            asset, direction, entry_price, exit_price, 
+            tp_price, sl_price, quantity, trade_date, notes
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        asset,
-        direction,
-        entry_price,
-        exit_price,
-        quantity,
-        trade_date,
-        notes
+        asset, direction, entry_price, exit_price, 
+        tp_price, sl_price, quantity, trade_date, notes
     ))
-
     conn.commit()
     conn.close()
 
