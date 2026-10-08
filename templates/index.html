@@ -85,7 +85,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- JS ile doldurucam -->
+                    <!-- Jinja2 -->
+                    {% for trade in trades %}
+                    <tr>
+                        <td>{{ trade.trade_date }}</td>
+                        <td>{{ trade.asset }}</td>
+                        <td class="{{ trade.direction|lower }}">{{ trade.direction }}</td>
+                        <td>{{ trade.entry_price }}</td>
+                        <td>{{ trade.exit_price if trade.exit_price else '-' }}</td>
+                        
+                        <!-- PnL Renklendirme Mantığı -->
+                        <td class="{% if trade.pnl is not none %}{% if trade.pnl > 0 %}profit{% elif trade.pnl < 0 %}loss{% else %}breakeven{% endif %}{% endif %}">
+                            {% if trade.pnl is not none %}
+                                ${{ "%.2f"|format(trade.pnl) }}
+                            {% else %}
+                                Açık
+                            {% endif %}
+                        </td>
+                        
+                        <td>{{ trade.notes }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center;">Henüz işlem kaydı bulunmuyor.</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
