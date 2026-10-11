@@ -56,3 +56,12 @@ python app.py
 
 
 Open http://127.0.0.1:5000 in your web browser to start using the app. The SQLite database file (trades.db) will be created automatically upon the first run.
+
+
+# The Features that will be added:
+         
+- [ ] Dark - Light Mode
+- [ ] Chart Adding
+- [ ] Language Choosing
+- [ ] Tp-Loss
+- [ ] API adding to see live charts
