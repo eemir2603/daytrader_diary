@@ -1,8 +1,8 @@
-DayTrader Diary 📈
+## DayTrader Diary 📈
 
 DayTrader Diary is a web-based portfolio and journal management tool that allows you to record, track, and analyze your trading activities in cryptocurrency, stock, or forex markets.
 
-🚀 Features
+#  Features
 
 Dynamic Dashboard: Automatically calculates and displays your Total PnL, Win Rate, and total number of trades.
 
@@ -16,7 +16,7 @@ CRUD Operations: Easily update existing trade details or completely delete them 
 
 Psychology & Strategy Notes: A dedicated text area for each entry to record your mindset, emotions, and strategic reasoning behind the trade.
 
-🛠️ Technologies Used
+# Technologies Used
 
 Backend: Python, Flask
 
@@ -24,7 +24,7 @@ Database: SQLite
 
 Frontend: HTML5, CSS3, Vanilla JavaScript, Jinja2 Template Engine
 
-⚙️ Installation and Setup
+# ⚙️ Installation and Setup
 
 To run the project on your local machine, follow these steps:
 
