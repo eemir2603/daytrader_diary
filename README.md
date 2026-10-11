@@ -63,5 +63,5 @@ Open http://127.0.0.1:5000 in your web browser to start using the app. The SQLit
 - [ ] Dark - Light Mode
 - [ ] Chart Adding
 - [ ] Language Choosing
-- [ ] Tp-Loss
+- [x] Tp-Loss
 - [ ] API adding to see live charts
