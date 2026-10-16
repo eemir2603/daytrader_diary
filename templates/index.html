@@ -9,135 +9,153 @@
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>İşlem Günlüğü</h1>
+        <header class="header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 data-i18n="title">İşlem Günlüğü</h1>
+            <div class="header-controls" style="display: flex; gap: 10px; align-items: center;">
+                <select id="langSelect" onchange="setLanguage(this.value)" class="control-btn">
+                    <option value="tr">🇹🇷 TR</option>
+                    <option value="en">🇬🇧 EN</option>
+                </select>
+                <button type="button" id="themeBtn" onclick="toggleTheme()" class="control-btn">🌙 Dark</button>
+            </div>
         </header>
 
         <!-- DashBoard -->
         <div class="dashboard-grid">
             <div class="card stat-card">
-                <span class="label">Toplam PnL</span>
-                <span class="value profit">${{ "%.2f"|format(total_pnl) }}</span>
+                <span class="label" data-i18n="stat_pnl">Toplam PnL</span>
+                <span class="value {% if total_pnl > 0 %}profit{% elif total_pnl < 0 %}loss{% endif %}">${{ "%.2f"|format(total_pnl) }}</span>
             </div>
             <div class="card stat-card">
-                <span class="label">Kazanma Oranı</span>
+                <span class="label" data-i18n="stat_winrate">Kazanma Oranı</span>
                 <span class="value">%{{ "%.1f"|format(win_rate) }}</span>
             </div>
             <div class="card stat-card">
-                <span class="label">Toplam İşlem</span>
+                <span class="label" data-i18n="stat_total">Toplam İşlem</span>
                 <span class="value">{{ total_trades }}</span>
             </div>
         </div>
 
         <!-- Yeni İşlem Formu -->
         <div class="card form-section">
-            <h2>Yeni İşlem Kaydı</h2>
+            <h2 data-i18n="form_title">Yeni İşlem Kaydı</h2>
             <form id="tradeForm" action="{{ url_for('add_trade') }}" method="POST">
                 <input type="hidden" id="trade_id" name="trade_id" value="">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Varlık (Sembol)</label>
+                        <label data-i18n="lbl_asset">Varlık (Sembol)</label>
                         <input type="text" id="asset" name="asset" placeholder="Örn: AAPL, BTC" required>
                     </div>
                     <div class="form-group">
-                        <label>Yön</label>
+                        <label data-i18n="lbl_direction">Yön</label>
                         <select id="direction" name="direction" required>
                             <option value="LONG">Long</option>
                             <option value="SHORT">Short</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Giriş Fiyatı</label>
+                        <label data-i18n="lbl_entry">Giriş Fiyatı</label>
                         <input type="number" id="entryPrice" name="entry_price" step="0.01" required>
                     </div>
                     <div class="form-group">
-                        <label>Çıkış Fiyatı</label>
+                        <label data-i18n="lbl_exit">Çıkış Fiyatı</label>
                         <input type="number" id="exitPrice" name="exit_price" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label>Take Profit (TP)</label>
+                        <label data-i18n="lbl_tp">Take Profit (TP)</label>
                         <input type="number" id="tp_price" name="tp_price" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label>Stop Loss (SL)</label>
+                        <label data-i18n="lbl_sl">Stop Loss (SL)</label>
                         <input type="number" id="sl_price" name="sl_price" step="0.01">
                     </div>
-                
                     <div class="form-group"> 
-                        <label>Miktar</label>
+                        <label data-i18n="lbl_qty">Miktar</label>
                         <input type="number" id="quantity" name="quantity" step="0.0001" min="0.0001" value="1" required>
                     </div>
                     <div class="form-group">
-                        <label>Tarih</label>
+                        <label data-i18n="lbl_date">Tarih</label>
                         <input type="date" id="trade_date" name="trade_date" required>   
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Strateji & Psikoloji Notları</label>
+                    <label data-i18n="lbl_notes">Strateji & Psikoloji Notları</label>
                     <textarea id="notes" name="notes" placeholder="İşleme girme sebebin, kullandığın formasyon veya duygu durumun..."></textarea>
                 </div>
-                <button type="submit" class="btn-primary">İşlemi Kaydet</button>
+                <button type="submit" class="btn-primary" data-i18n="btn_save">İşlemi Kaydet</button>
             </form>
         </div>
 
         <!-- İşlem Geçmişi -->
         <div class="card table-section">
-            <h2>Geçmiş İşlemler</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                <h2 data-i18n="history_title" style="margin: 0;">Geçmiş İşlemler</h2>
+                
+                <!-- Filtreleme Butonları -->
+                <div class="filter-bar" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="filter-btn active" onclick="filterTrades('ALL', this)" data-i18n="filter_all">Tümü</button>
+                    <button type="button" class="filter-btn" onclick="filterTrades('WIN', this)" data-i18n="filter_win">Kazananlar</button>
+                    <button type="button" class="filter-btn" onclick="filterTrades('LOSS', this)" data-i18n="filter_loss">Kaybedenler</button>
+                    <button type="button" class="filter-btn" onclick="filterTrades('OPEN', this)" data-i18n="filter_open">Açık İşlemler</button>
+                    <button type="button" class="filter-btn" onclick="filterTrades('LONG', this)">Long</button>
+                    <button type="button" class="filter-btn" onclick="filterTrades('SHORT', this)">Short</button>
+                </div>
+            </div>
+
             <table id="historyTable">
                 <thead>
                     <tr>
-                        <th>Tarih</th>
-                        <th>Varlık</th>
-                        <th>Yön</th>
-                        <th>Giriş</th>
-                        <th>Çıkış</th>
-                        <th>PnL</th>
-                        <th>Notlar</th>
-                        <th>İşlem</th> <!-- SİLME BUTONU İÇİN BAŞLIK -->
+                        <th data-i18n="th_date">Tarih</th>
+                        <th data-i18n="th_asset">Varlık</th>
+                        <th data-i18n="th_dir">Yön</th>
+                        <th data-i18n="th_entry">Giriş</th>
+                        <th data-i18n="th_exit">Çıkış</th>
+                        <th data-i18n="th_pnl">PnL</th>
+                        <th data-i18n="th_notes">Notlar</th>
+                        <th data-i18n="th_action">İşlem</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Jinja2  -->
                     {% for trade in trades %}
-                    <tr>
+                    <tr class="trade-row" data-result="{{ trade.result }}" data-direction="{{ trade.direction }}">
                         <td>{{ trade.trade_date }}</td>
                         <td>{{ trade.asset }}</td>
                         <td class="{{ trade.direction|lower }}">{{ trade.direction }}</td>
-                        
-                        <!-- GİRİŞ FİYATI VE ALTINDA TP/SL BİLGİSİ -->
                         <td>
                             {{ trade.entry_price }}<br>
                             {% if trade.tp_price %}<span style="color: #4CAF50; font-size: 0.8em;">TP: {{ trade.tp_price }}</span><br>{% endif %}
                             {% if trade.sl_price %}<span style="color: #f44336; font-size: 0.8em;">SL: {{ trade.sl_price }}</span>{% endif %}
                         </td>
-                        
                         <td>{{ trade.exit_price if trade.exit_price else '-' }}</td>
-                        <!-- PnL Renklendirme Mantığı -->
                         <td class="{% if trade.pnl is not none %}{% if trade.pnl > 0 %}profit{% elif trade.pnl < 0 %}loss{% else %}breakeven{% endif %}{% endif %}">
                             {% if trade.pnl is not none %}
                                 ${{ "%.2f"|format(trade.pnl) }}
                             {% else %}
-                                Açık
+                                <span data-i18n="status_open">Açık</span>
                             {% endif %}
                         </td>
-                        
                         <td>{{ trade.notes }}</td>
                         <td>
-                            <button type="button" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 5px;"
+                            <button type="button" data-i18n="btn_edit" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 5px;"
                                     onclick='editTrade({{ trade.id }}, {{ trade.asset|tojson }}, {{ trade.direction|tojson }}, {{ trade.entry_price|tojson }}, {{ trade.exit_price|tojson if trade.exit_price is not none else "null" }}, {{ trade.tp_price|tojson if trade.tp_price is not none else "null" }}, {{ trade.sl_price|tojson if trade.sl_price is not none else "null" }}, {{ trade.quantity|tojson }}, {{ trade.trade_date|tojson }}, {{ trade.notes|tojson if trade.notes is not none else "null" }})'>
                                 Düzenle
                             </button>
                             <br>
                             <form action="{{ url_for('delete_trade', trade_id=trade.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" style="background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" onclick="return confirm('Silmek istediğine emin misin?');">Sil</button>
+                                <button type="submit" data-i18n="btn_delete" style="background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" onclick="return confirm('Silmek istediğine emin misin?');">Sil</button>
                             </form>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" style="text-align: center;">Henüz işlem kaydı bulunmuyor.</td>
+                        <td colspan="8" style="text-align: center;" data-i18n="empty_table">Henüz işlem kaydı bulunmuyor.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
