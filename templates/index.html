@@ -33,6 +33,7 @@
         <div class="card form-section">
             <h2>Yeni İşlem Kaydı</h2>
             <form id="tradeForm" action="{{ url_for('add_trade') }}" method="POST">
+                <input type="hidden" id="trade_id" name="trade_id" value="">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Varlık (Sembol)</label>
@@ -53,6 +54,15 @@
                         <label>Çıkış Fiyatı</label>
                         <input type="number" id="exitPrice" name="exit_price" step="0.01">
                     </div>
+                    <div class="form-group">
+                        <label>Take Profit (TP)</label>
+                        <input type="number" id="tp_price" name="tp_price" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Stop Loss (SL)</label>
+                        <input type="number" id="sl_price" name="sl_price" step="0.01">
+                    </div>
+                
                     <div class="form-group"> 
                         <label>Miktar</label>
                         <input type="number" id="quantity" name="quantity" step="0.0001" min="0.0001" value="1" required>
@@ -83,18 +93,25 @@
                         <th>Çıkış</th>
                         <th>PnL</th>
                         <th>Notlar</th>
+                        <th>İşlem</th> <!-- SİLME BUTONU İÇİN BAŞLIK -->
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Jinja2 -->
+                    <!-- Jinja2  -->
                     {% for trade in trades %}
                     <tr>
                         <td>{{ trade.trade_date }}</td>
                         <td>{{ trade.asset }}</td>
                         <td class="{{ trade.direction|lower }}">{{ trade.direction }}</td>
-                        <td>{{ trade.entry_price }}</td>
-                        <td>{{ trade.exit_price if trade.exit_price else '-' }}</td>
                         
+                        <!-- GİRİŞ FİYATI VE ALTINDA TP/SL BİLGİSİ -->
+                        <td>
+                            {{ trade.entry_price }}<br>
+                            {% if trade.tp_price %}<span style="color: #4CAF50; font-size: 0.8em;">TP: {{ trade.tp_price }}</span><br>{% endif %}
+                            {% if trade.sl_price %}<span style="color: #f44336; font-size: 0.8em;">SL: {{ trade.sl_price }}</span>{% endif %}
+                        </td>
+                        
+                        <td>{{ trade.exit_price if trade.exit_price else '-' }}</td>
                         <!-- PnL Renklendirme Mantığı -->
                         <td class="{% if trade.pnl is not none %}{% if trade.pnl > 0 %}profit{% elif trade.pnl < 0 %}loss{% else %}breakeven{% endif %}{% endif %}">
                             {% if trade.pnl is not none %}
@@ -105,15 +122,22 @@
                         </td>
                         
                         <td>{{ trade.notes }}</td>
+                        <td>
+                            <button type="button" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 5px;"
+                                    onclick='editTrade({{ trade.id }}, {{ trade.asset|tojson }}, {{ trade.direction|tojson }}, {{ trade.entry_price|tojson }}, {{ trade.exit_price|tojson if trade.exit_price is not none else "null" }}, {{ trade.tp_price|tojson if trade.tp_price is not none else "null" }}, {{ trade.sl_price|tojson if trade.sl_price is not none else "null" }}, {{ trade.quantity|tojson }}, {{ trade.trade_date|tojson }}, {{ trade.notes|tojson if trade.notes is not none else "null" }})'>
+                                Düzenle
+                            </button>
+                            <br>
+                            <form action="{{ url_for('delete_trade', trade_id=trade.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" style="background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" onclick="return confirm('Silmek istediğine emin misin?');">Sil</button>
+                            </form>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" style="text-align: center;">Henüz işlem kaydı bulunmuyor.</td>
+                        <td colspan="8" style="text-align: center;">Henüz işlem kaydı bulunmuyor.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
-</body>
-</html>
+            

@@ -109,8 +109,8 @@ def add_trade():
     direction = request.form.get("direction", "LONG")
     entry_price = request.form.get("entry_price")
     exit_price = request.form.get("exit_price")
-    tp_price = request.form.get("tp_price") # EKLENDİ
-    sl_price = request.form.get("sl_price") # EKLENDİ
+    tp_price = request.form.get("tp_price") 
+    sl_price = request.form.get("sl_price")
     quantity = request.form.get("quantity", "1")
     trade_date = request.form.get("trade_date")
     notes = request.form.get("notes", "").strip()
@@ -121,8 +121,8 @@ def add_trade():
         entry_price = float(entry_price)
         quantity = float(quantity)
         exit_price = float(exit_price) if exit_price else None
-        tp_price = float(tp_price) if tp_price else None # EKLENDİ
-        sl_price = float(sl_price) if sl_price else None # EKLENDİ
+        tp_price = float(tp_price) if tp_price else None 
+        sl_price = float(sl_price) if sl_price else None 
 
         if quantity <= 0:
             return "Quantity 0'dan büyük olmalı.", 400
@@ -145,7 +145,51 @@ def add_trade():
 
     return redirect(url_for("index"))
 
+@app.route("/delete_trade/<int:trade_id>", methods=["POST"])
+def delete_trade(trade_id):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM trades WHERE id = ?", (trade_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("index"))
+
 
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
+
+@app.route("/update_trade/<int:trade_id>", methods=["POST"])
+def update_trade(trade_id):
+    asset = request.form.get("asset", "").strip().upper()
+    direction = request.form.get("direction", "LONG")
+    entry_price = request.form.get("entry_price")
+    exit_price = request.form.get("exit_price")
+    tp_price = request.form.get("tp_price")
+    sl_price = request.form.get("sl_price")
+    quantity = request.form.get("quantity", "1")
+    trade_date = request.form.get("trade_date")
+    notes = request.form.get("notes", "").strip()
+
+    try:
+        entry_price = float(entry_price)
+        quantity = float(quantity)
+        exit_price = float(exit_price) if exit_price else None
+        tp_price = float(tp_price) if tp_price else None
+        sl_price = float(sl_price) if sl_price else None
+    except ValueError:
+        return "Fiyat veya miktar geçersiz.", 400
+
+    conn = get_db_connection()
+    conn.execute("""
+        UPDATE trades 
+        SET asset=?, direction=?, entry_price=?, exit_price=?, 
+            tp_price=?, sl_price=?, quantity=?, trade_date=?, notes=?
+        WHERE id=?
+    """, (
+        asset, direction, entry_price, exit_price, 
+        tp_price, sl_price, quantity, trade_date, notes, trade_id
+    ))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("index"))
