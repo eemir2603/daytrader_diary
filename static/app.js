@@ -59,7 +59,9 @@ const translations = {
         btn_edit: "Düzenle",
         btn_delete: "Sil",
         status_open: "Açık",
-        empty_table: "Henüz işlem kaydı bulunmuyor."
+        empty_table: "Henüz işlem kaydı bulunmuyor.",
+        chart_title: "PnL Performans Grafiği"
+
     },
     en: {
         title: "DayTrader Diary",
@@ -94,7 +96,8 @@ const translations = {
         btn_edit: "Edit",
         btn_delete: "Delete",
         status_open: "Open",
-        empty_table: "No trade records found yet."
+        empty_table: "No trade records found yet.",
+        chart_title: "PnL Performance Chart"
     }
 };
 
@@ -120,6 +123,7 @@ function toggleTheme() {
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+    renderPnLChart();
 }
 
 // 4. TABLO FİLTRELEME
@@ -139,11 +143,97 @@ function filterTrades(filterType, btnElement) {
         } else {
             row.style.display = (result === filterType) ? '' : 'none';
         }
+
+// 5. PNL PERFORMANS GRAFİĞİ (CHART.JS)
+let pnlChartInstance = null;
+
+function renderPnLChart() {
+    const ctx = document.getElementById('pnlChart');
+    if (!ctx) return;
+
+    // Tablodaki satırlardan tarih ve PnL verilerini çek (eskiden yeniye doğru sırala)
+    const rows = Array.from(document.querySelectorAll('#historyTable tbody tr.trade-row')).reverse();
+    
+    const labels = [];
+    const dataPoints = [];
+    let cumulativePnL = 0;
+
+    rows.forEach(row => {
+        const date = row.cells[0].textContent.trim();
+        const asset = row.cells[1].textContent.trim();
+        const pnlText = row.cells[5].textContent.trim();
+
+        // Sadece kapanmış (PnL değeri '$' içeren) işlemleri grafiğe dahil et
+        if (pnlText.includes('$')) {
+            const pnlValue = parseFloat(pnlText.replace('$', ''));
+            if (!isNaN(pnlValue)) {
+                cumulativePnL += pnlValue;
+                labels.push(`${date} (${asset})`);
+                dataPoints.push(cumulativePnL);
+            }
+        }
+    });
+
+    // Eğer hiç kapanmış işlem yoksa başlangıç noktası olarak 0 göster
+    if (labels.length === 0) {
+        labels.push('Başlangıç');
+        dataPoints.push(0);
+    }
+
+    const isDark = document.body.classList.contains('dark-mode');
+    const textColor = isDark ? '#94a3b8' : '#4b5563';
+    const gridColor = isDark ? '#334155' : '#e5e7eb';
+    const lineColor = cumulativePnL >= 0 ? '#10b981' : '#ef4444';
+
+    if (pnlChartInstance) {
+        pnlChartInstance.destroy();
+    }
+
+    pnlChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Kümülatif PnL ($)',
+                data: dataPoints,
+                borderColor: lineColor,
+                backgroundColor: cumulativePnL >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                borderWidth: 3,
+                pointBackgroundColor: lineColor,
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: textColor }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: {
+                        color: textColor,
+                        callback: function(value) { return '$' + value; }
+                    },
+                    grid: { color: gridColor }
+                }
+            }
+        }
+    });
+}
     });
 }
 
 // SAYFA YÜKLENDİĞİNDE KAYITLI AYARLARI UYGULA
-document.addEventListener('DOMContentLoaded', () => {
+    renderPnLChart();
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
