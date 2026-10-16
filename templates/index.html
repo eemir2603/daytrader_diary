@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DayTrader Diary</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -33,6 +34,14 @@
             <div class="card stat-card">
                 <span class="label" data-i18n="stat_total">Toplam İşlem</span>
                 <span class="value">{{ total_trades }}</span>
+            </div>
+        </div>
+
+        <!-- PnL Performans Grafiği -->
+        <div class="card chart-section" style="margin-bottom: 24px; padding: 20px;">
+            <h2 data-i18n="chart_title" style="margin-bottom: 15px;">PnL Performans Grafiği (Equity Curve)</h2>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="pnlChart"></canvas>
             </div>
         </div>
 
@@ -136,13 +145,21 @@
                         </td>
                         <td>{{ trade.notes }}</td>
                         <td>
-                            <button type="button" data-i18n="btn_edit" style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 5px;"
-                                    onclick='editTrade({{ trade.id }}, {{ trade.asset|tojson }}, {{ trade.direction|tojson }}, {{ trade.entry_price|tojson }}, {{ trade.exit_price|tojson if trade.exit_price is not none else "null" }}, {{ trade.tp_price|tojson if trade.tp_price is not none else "null" }}, {{ trade.sl_price|tojson if trade.sl_price is not none else "null" }}, {{ trade.quantity|tojson }}, {{ trade.trade_date|tojson }}, {{ trade.notes|tojson if trade.notes is not none else "null" }})'>
+                            <button type="button" data-i18n="btn_edit"
+                                    style="background-color: #ffc107; color: black; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 5px;"
+                                    data-id="{{ trade.id }}"
+                                    data-asset="{{ trade.asset }}"
+                                    data-direction="{{ trade.direction }}"
+                                    data-entry="{{ trade.entry_price }}"
+                                    data-exit="{{ trade.exit_price if trade.exit_price is not none else '' }}"
+                                    data-tp="{{ trade.tp_price if trade.tp_price is not none else '' }}"
+                                    data-sl="{{ trade.sl_price if trade.sl_price is not none else '' }}"
+                                    data-qty="{{ trade.quantity }}"
+                                    data-date="{{ trade.trade_date }}"
+                                    data-notes="{{ trade.notes if trade.notes is not none else '' }}"
+                                    onclick="editTrade(this)">
                                 Düzenle
                             </button>
-                            <br>
-                            <form action="{{ url_for('delete_trade', trade_id=trade.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" data-i18n="btn_delete" style="background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" onclick="return confirm('Silmek istediğine emin misin?');">Sil</button>
                             </form>
                         </td>
                     </tr>

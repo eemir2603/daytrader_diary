@@ -1,15 +1,16 @@
 // 1. İŞLEM DÜZENLEME (EDIT) FONKSİYONU
-function editTrade(id, asset, direction, entry, exit, tp, sl, qty, date, notes) {
+function editTrade(btn) {
+    const id = btn.getAttribute('data-id');
     document.getElementById('trade_id').value = id;
-    document.getElementById('asset').value = asset || '';
-    document.getElementById('direction').value = direction;
-    document.getElementById('entryPrice').value = entry || '';
-    document.getElementById('exitPrice').value = exit || '';
-    document.getElementById('tp_price').value = tp || '';
-    document.getElementById('sl_price').value = sl || '';
-    document.getElementById('quantity').value = qty || '1';
-    document.getElementById('trade_date').value = date || '';
-    document.getElementById('notes').value = notes || '';
+    document.getElementById('asset').value = btn.getAttribute('data-asset') || '';
+    document.getElementById('direction').value = btn.getAttribute('data-direction') || 'LONG';
+    document.getElementById('entryPrice').value = btn.getAttribute('data-entry') || '';
+    document.getElementById('exitPrice').value = btn.getAttribute('data-exit') || '';
+    document.getElementById('tp_price').value = btn.getAttribute('data-tp') || '';
+    document.getElementById('sl_price').value = btn.getAttribute('data-sl') || '';
+    document.getElementById('quantity').value = btn.getAttribute('data-qty') || '1';
+    document.getElementById('trade_date').value = btn.getAttribute('data-date') || '';
+    document.getElementById('notes').value = btn.getAttribute('data-notes') || '';
 
     let form = document.getElementById('tradeForm');
     form.action = "/update_trade/" + id;
@@ -31,6 +32,7 @@ const translations = {
         stat_pnl: "Toplam PnL",
         stat_winrate: "Kazanma Oranı",
         stat_total: "Toplam İşlem",
+        chart_title: "PnL Performans Grafiği (Equity Curve)",
         form_title: "Yeni İşlem Kaydı",
         lbl_asset: "Varlık (Sembol)",
         lbl_direction: "Yön",
@@ -59,15 +61,14 @@ const translations = {
         btn_edit: "Düzenle",
         btn_delete: "Sil",
         status_open: "Açık",
-        empty_table: "Henüz işlem kaydı bulunmuyor.",
-        chart_title: "PnL Performans Grafiği"
-
+        empty_table: "Henüz işlem kaydı bulunmuyor."
     },
     en: {
         title: "DayTrader Diary",
         stat_pnl: "Total PnL",
         stat_winrate: "Win Rate",
         stat_total: "Total Trades",
+        chart_title: "PnL Performance Chart (Equity Curve)",
         form_title: "New Trade Entry",
         lbl_asset: "Asset (Symbol)",
         lbl_direction: "Direction",
@@ -96,8 +97,7 @@ const translations = {
         btn_edit: "Edit",
         btn_delete: "Delete",
         status_open: "Open",
-        empty_table: "No trade records found yet.",
-        chart_title: "PnL Performance Chart"
+        empty_table: "No trade records found yet."
     }
 };
 
@@ -105,12 +105,11 @@ function setLanguage(lang) {
     localStorage.setItem('lang', lang);
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (translations[lang][key]) {
+        if (translations[lang] && translations[lang][key]) {
             el.textContent = translations[lang][key];
         }
     });
 
-    // Placeholder çevirileri
     const assetInput = document.getElementById('asset');
     const notesInput = document.getElementById('notes');
     if (assetInput) assetInput.placeholder = lang === 'en' ? "e.g. AAPL, BTC" : "Örn: AAPL, BTC";
@@ -122,7 +121,8 @@ function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    document.getElementById('themeBtn').textContent = isDark ? '☀️ Light' : '🌙 Dark';
+    const themeBtn = document.getElementById('themeBtn');
+    if (themeBtn) themeBtn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
     renderPnLChart();
 }
 
@@ -133,8 +133,8 @@ function filterTrades(filterType, btnElement) {
 
     const rows = document.querySelectorAll('#historyTable tbody tr.trade-row');
     rows.forEach(row => {
-        const result = row.getAttribute('data-result'); // WIN, LOSS, BREAKEVEN, OPEN
-        const direction = row.getAttribute('data-direction'); // LONG, SHORT
+        const result = row.getAttribute('data-result');
+        const direction = row.getAttribute('data-direction');
 
         if (filterType === 'ALL') {
             row.style.display = '';
@@ -151,11 +151,10 @@ let pnlChartInstance = null;
 
 function renderPnLChart() {
     const ctx = document.getElementById('pnlChart');
-    if (!ctx) return;
+    if (!ctx || typeof Chart === 'undefined') return;
 
-    // Tablodaki satırlardan tarih ve PnL verilerini çek (eskiden yeniye doğru sırala)
     const rows = Array.from(document.querySelectorAll('#historyTable tbody tr.trade-row')).reverse();
-
+    
     const labels = [];
     const dataPoints = [];
     let cumulativePnL = 0;
@@ -165,7 +164,6 @@ function renderPnLChart() {
         const asset = row.cells[1].textContent.trim();
         const pnlText = row.cells[5].textContent.trim();
 
-        // Sadece kapanmış (PnL değeri '$' içeren) işlemleri grafiğe dahil et
         if (pnlText.includes('$')) {
             const pnlValue = parseFloat(pnlText.replace('$', ''));
             if (!isNaN(pnlValue)) {
@@ -176,9 +174,8 @@ function renderPnLChart() {
         }
     });
 
-    // Eğer hiç kapanmış işlem yoksa başlangıç noktası olarak 0 göster
     if (labels.length === 0) {
-        labels.push('Başlangıç');
+        labels.push('Start');
         dataPoints.push(0);
     }
 
@@ -196,7 +193,7 @@ function renderPnLChart() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Kümülatif PnL ($)',
+                label: 'PnL ($)',
                 data: dataPoints,
                 borderColor: lineColor,
                 backgroundColor: cumulativePnL >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
@@ -234,7 +231,6 @@ function renderPnLChart() {
 
 // SAYFA YÜKLENDİĞİNDE KAYITLI AYARLARI UYGULA
 document.addEventListener('DOMContentLoaded', () => {
-    renderPnLChart();
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-mode');
@@ -246,4 +242,5 @@ document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.getElementById('langSelect');
     if (langSelect) langSelect.value = savedLang;
     setLanguage(savedLang);
-a;
+    renderPnLChart();
+});
