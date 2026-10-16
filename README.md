@@ -60,8 +60,8 @@ Open http://127.0.0.1:5000 in your web browser to start using the app. The SQLit
 
 # The Features that will be added:
          
-- [ ] Dark - Light Mode
+- [x] Dark - Light Mode
 - [ ] Chart Adding
-- [ ] Language Choosing
+- [x] Language Choosing
 - [x] Tp-Loss
 - [ ] API adding to see live charts
