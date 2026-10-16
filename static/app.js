@@ -143,6 +143,8 @@ function filterTrades(filterType, btnElement) {
         } else {
             row.style.display = (result === filterType) ? '' : 'none';
         }
+    });
+}
 
 // 5. PNL PERFORMANS GRAFİĞİ (CHART.JS)
 let pnlChartInstance = null;
@@ -153,7 +155,7 @@ function renderPnLChart() {
 
     // Tablodaki satırlardan tarih ve PnL verilerini çek (eskiden yeniye doğru sırala)
     const rows = Array.from(document.querySelectorAll('#historyTable tbody tr.trade-row')).reverse();
-    
+
     const labels = [];
     const dataPoints = [];
     let cumulativePnL = 0;
@@ -229,10 +231,9 @@ function renderPnLChart() {
         }
     });
 }
-    });
-}
 
 // SAYFA YÜKLENDİĞİNDE KAYITLI AYARLARI UYGULA
+document.addEventListener('DOMContentLoaded', () => {
     renderPnLChart();
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
@@ -245,4 +246,4 @@ function renderPnLChart() {
     const langSelect = document.getElementById('langSelect');
     if (langSelect) langSelect.value = savedLang;
     setLanguage(savedLang);
-});
+a;
